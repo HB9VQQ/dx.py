@@ -130,6 +130,53 @@ $ dx --watch
 
 Prefer a browser? View the full dashboard at [grafana.gafner.net](https://grafana.gafner.net/goto/_UcHBCWDg?orgId=1)
 
+## API
+
+Public JSON endpoint for integration into your own tools:
+
+```
+https://wspr.hb9vqq.ch/api/dx.json
+```
+
+### Example Response
+
+```json
+{
+  "updated": "2025-12-07T12:45:07+00:00",
+  "bands": {
+    "10m": {"index": 28.7, "rating": "Poor", "forecast": 28.7, "forecast_rating": "Poor"},
+    "15m": {"index": 31.1, "rating": "Poor", "forecast": 29.8, "forecast_rating": "VeryPoor"},
+    "20m": {"index": 32.4, "rating": "Poor", "forecast": 28.1, "forecast_rating": "VeryPoor"},
+    "40m": {"index": 38.4, "rating": "Poor", "forecast": 28.8, "forecast_rating": "Poor"}
+  },
+  "solar": {"sfi": 200.0, "kp": 1.0, "ap": 5.0},
+  "storm": {"probability": 0.4, "predicted_kp": 2.1}
+}
+```
+
+### Usage Examples
+
+**curl**
+```bash
+curl -s https://wspr.hb9vqq.ch/api/dx.json | jq '.bands["10m"].rating'
+```
+
+**Python**
+```python
+import urllib.request, json
+data = json.loads(urllib.request.urlopen("https://wspr.hb9vqq.ch/api/dx.json").read())
+print(f"10m: {data['bands']['10m']['rating']}")
+```
+
+**JavaScript**
+```javascript
+fetch("https://wspr.hb9vqq.ch/api/dx.json")
+  .then(r => r.json())
+  .then(d => console.log("10m:", d.bands["10m"].rating))
+```
+
+Updates every 10 minutes.
+
 ## License
 
 MIT License - Free to use and modify.
