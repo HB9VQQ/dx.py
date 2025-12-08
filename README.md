@@ -26,7 +26,7 @@ A command-line tool for checking real-time HF radio propagation conditions.
 
 ```bash
 # Download
-curl -O https://raw.githubusercontent.com/HB9VQQ/dx/main/dx.py
+curl -O https://raw.githubusercontent.com/HB9VQQ/dx.py/main/dx.py
 
 # Make executable
 chmod +x dx.py
@@ -37,10 +37,11 @@ sudo mv dx.py /usr/local/bin/dx
 
 ### Windows
 
-1. Download [dx.py](https://raw.githubusercontent.com/HB9VQQ/dx/main/dx.py)
+1. Download [dx.py](https://raw.githubusercontent.com/HB9VQQ/dx.py/main/dx.py)
 2. Run: `python dx.py`
 
 **Optional:** Create `dx.bat` in your PATH:
+
 ```batch
 @echo off
 python C:\path\to\dx.py %*
@@ -80,23 +81,27 @@ dx --alert Fair
 ## Examples
 
 ### Quick check
+
 ```bash
 $ dx
 ```
 
 ### One-liner for status bar / tmux
+
 ```bash
 $ dx --compact
 10m:Poor(29) | 15m:Poor(31) | 20m:Poor(32) | 40m:Poor(38)
 ```
 
 ### JSON for scripting
+
 ```bash
 $ dx --json | jq '.bands["10m"].rating'
 "Poor"
 ```
 
 ### Notification when band opens
+
 ```bash
 # Linux (notify-send)
 dx --alert Good && notify-send "10m is open!"
@@ -106,12 +111,14 @@ dx --alert Good && osascript -e 'display notification "10m is open!"'
 ```
 
 ### Cron job for alerts
+
 ```bash
 # Check every 15 minutes, send pushover notification when any band is Good or better
 */15 * * * * /usr/local/bin/dx --alert Good && curl -s -X POST https://api.pushover.net/1/messages.json -d "token=xxx&user=xxx&message=HF bands are good!"
 ```
 
 ### Live monitor in terminal
+
 ```bash
 $ dx --watch
 ```
@@ -157,11 +164,13 @@ https://wspr.hb9vqq.ch/api/dx.json
 ### Usage Examples
 
 **curl**
+
 ```bash
 curl -s https://wspr.hb9vqq.ch/api/dx.json | jq '.bands["10m"].rating'
 ```
 
 **Python**
+
 ```python
 import urllib.request, json
 data = json.loads(urllib.request.urlopen("https://wspr.hb9vqq.ch/api/dx.json").read())
@@ -169,6 +178,7 @@ print(f"10m: {data['bands']['10m']['rating']}")
 ```
 
 **JavaScript**
+
 ```javascript
 fetch("https://wspr.hb9vqq.ch/api/dx.json")
   .then(r => r.json())
