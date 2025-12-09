@@ -26,6 +26,7 @@ Examples:
     dx --alert Good         # Exit 0 if any band >= Good, else exit 1
 
 Author: HB9VQQ
+Version: 1.1 - Dec 10, 2025 - Added vs_typical peak percentage display
 Version: 1.0 - Dec 7, 2025
 """
 
@@ -106,8 +107,8 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
     lines.append("")
     
     # Header
-    lines.append(f"  {'Band':<6} {'Now':<8} {'Rating':<12} {'Tomorrow':<10}")
-    lines.append("  " + "─" * 45)
+    lines.append(f"  {'Band':<6} {'Now':<8} {'Rating':<18} {'Tomorrow':<12}")
+    lines.append("  " + "─" * 48)
     
     # Each band
     band_data = data.get("bands", {})
@@ -120,7 +121,17 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
             fcst = d.get("forecast", 0)
             fcst_rating = d.get("forecast_rating", "?")
             
-            lines.append(f"  {band:<6} {idx:<8.1f} {symbol} {rating:<10} {fcst:.1f} ({fcst_rating})")
+            # Add peak indicator if significant (>20% above typical)
+            vs_typical = d.get("vs_typical")
+            if vs_typical and vs_typical > 20:
+                if use_ascii:
+                    rating_str = f"{symbol} {rating} +{vs_typical}%"
+                else:
+                    rating_str = f"{symbol} {rating} ⬆+{vs_typical}%"
+            else:
+                rating_str = f"{symbol} {rating}"
+            
+            lines.append(f"  {band:<6} {idx:<8.1f} {rating_str:<18} {fcst:.1f} ({fcst_rating})")
     
     lines.append("")
     
@@ -135,7 +146,10 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
         prob = storm["probability"]
         kp = storm.get("predicted_kp", 0)
         if prob >= 50:
-            lines.append(f"  ⚠️  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
+            if use_ascii:
+                lines.append(f"  [!] Storm: {prob:.0f}% probability -> Kp {kp:.1f}")
+            else:
+                lines.append(f"  ⚠️  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
         elif prob >= 30:
             lines.append(f"  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
     
@@ -158,7 +172,12 @@ def format_compact(data: dict, bands: list) -> str:
             d = band_data[band]
             idx = d.get("index", 0)
             rating = d.get("rating", "?")
-            parts.append(f"{band}:{rating}({idx:.0f})")
+            vs_typical = d.get("vs_typical")
+            
+            if vs_typical and vs_typical > 20:
+                parts.append(f"{band}:{rating}({idx:.0f})⬆{vs_typical}%")
+            else:
+                parts.append(f"{band}:{rating}({idx:.0f})")
     
     return " | ".join(parts)
 
