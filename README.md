@@ -6,19 +6,29 @@ A command-line tool for checking real-time HF radio propagation conditions.
 ═══════════════════════════════════════════════════════
   HF DX INDEX - Current Conditions
 ═══════════════════════════════════════════════════════
-  Updated: 2025-12-07 12:45 UTC
+  Updated: 2025-12-09 20:45 UTC
 
-  Band   Now      Rating       Tomorrow  
-  ─────────────────────────────────────────────────────
-  10m    28.7     🔴 Poor       28.7 (Poor)
-  15m    31.1     🔴 Poor       29.8 (VeryPoor)
-  20m    32.4     🔴 Poor       28.1 (VeryPoor)
-  40m    38.4     🔴 Poor       28.8 (Poor)
+  Band   Now      Rating             Tomorrow
+  ────────────────────────────────────────────────
+  10m    78.7     🔵 Excellent ⬆+76%  45.3 (Fair)
+  15m    43.6     🟠 Fair             38.4 (Fair)
+  20m    38.6     🟠 Fair             37.0 (Fair)
+  40m    52.0     🟢 Good ⬆+52%       43.6 (Fair)
 
-  Solar: SFI 200 | Kp 1.0
+  Solar: SFI 183 | Kp 1.0
 ═══════════════════════════════════════════════════════
   Source: wspr.hb9vqq.ch | 73 de HB9VQQ
 ```
+
+## Features
+
+- **Real-time DX Index** for 10m, 15m, 20m, and 40m bands
+- **Tomorrow's forecast** based on NOAA solar predictions
+- **Peak detection** - shows ⬆+XX% when a band exceeds 20% above its typical hourly performance
+- **Storm warnings** when geomagnetic disturbances are predicted
+- **Multiple output formats** - standard, compact, JSON
+- **Alert mode** for scripting and notifications
+- **No dependencies** - uses only Python standard library
 
 ## Installation
 
@@ -90,24 +100,27 @@ $ dx
 
 ```bash
 $ dx --compact
-10m:Poor(29) | 15m:Poor(31) | 20m:Poor(32) | 40m:Poor(38)
+10m:Excellent(79)⬆76% | 15m:Fair(44) | 20m:Fair(39) | 40m:Good(52)⬆52%
 ```
 
 ### JSON for scripting
 
 ```bash
 $ dx --json | jq '.bands["10m"].rating'
-"Poor"
+"Excellent"
+
+# Check if any band is performing above typical
+$ dx --json | jq '.bands | to_entries[] | select(.value.vs_typical > 30)'
 ```
 
 ### Notification when band opens
 
 ```bash
 # Linux (notify-send)
-dx --alert Good && notify-send "10m is open!"
+dx --alert Good && notify-send "HF bands are open!"
 
 # macOS
-dx --alert Good && osascript -e 'display notification "10m is open!"'
+dx --alert Good && osascript -e 'display notification "HF bands are open!"'
 ```
 
 ### Cron job for alerts
@@ -123,19 +136,27 @@ dx --alert Good && osascript -e 'display notification "10m is open!"'
 $ dx --watch
 ```
 
-## Rating Scale
+## Understanding the Display
+
+### Rating Scale
 
 | Rating | DX Index | Conditions |
 |--------|----------|------------|
-| 🔵 Excellent | ≥75 | Worldwide DX wide open |
-| 🟢 Good | 50-75 | Reliable DX contacts |
+| 🔵 Excellent | ≥70 | Worldwide DX wide open |
+| 🟢 Good | 50-70 | Reliable DX contacts |
 | 🟠 Fair | 35-50 | Shorter openings, regional DX |
-| 🔴 Poor | 25-35 | Few DX opportunities |
-| ⚫ VeryPoor | <25 | Band likely closed |
+| 🔴 Poor | 20-35 | Few DX opportunities |
+| ⚫ VeryPoor | <20 | Band likely closed |
+
+### Peak Indicator (⬆+XX%)
+
+When you see `⬆+76%` next to a rating, it means that band is currently performing 76% better than its typical performance for this hour of day (based on a 30-day average). This highlights exceptional openings worth taking advantage of.
+
+The indicator only appears when performance exceeds 20% above typical.
 
 ## Web Version
 
-Prefer a browser? View the full dashboard at [grafana.gafner.net](https://grafana.gafner.net/goto/_UcHBCWDg?orgId=1)
+Prefer a browser? View the full dashboard at [wspr.hb9vqq.ch](https://wspr.hb9vqq.ch)
 
 ## API
 
@@ -149,17 +170,49 @@ https://wspr.hb9vqq.ch/api/dx.json
 
 ```json
 {
-  "updated": "2025-12-07T12:45:07+00:00",
+  "updated": "2025-12-09T20:45:07+00:00",
   "bands": {
-    "10m": {"index": 28.7, "rating": "Poor", "forecast": 28.7, "forecast_rating": "Poor"},
-    "15m": {"index": 31.1, "rating": "Poor", "forecast": 29.8, "forecast_rating": "VeryPoor"},
-    "20m": {"index": 32.4, "rating": "Poor", "forecast": 28.1, "forecast_rating": "VeryPoor"},
-    "40m": {"index": 38.4, "rating": "Poor", "forecast": 28.8, "forecast_rating": "Poor"}
+    "10m": {
+      "index": 78.7,
+      "rating": "Excellent",
+      "forecast": 45.3,
+      "forecast_rating": "Fair",
+      "vs_typical": 76
+    },
+    "15m": {
+      "index": 43.6,
+      "rating": "Fair",
+      "forecast": 38.4,
+      "forecast_rating": "Fair"
+    },
+    "20m": {
+      "index": 38.6,
+      "rating": "Fair",
+      "forecast": 37.0,
+      "forecast_rating": "Fair"
+    },
+    "40m": {
+      "index": 52.0,
+      "rating": "Good",
+      "forecast": 43.6,
+      "forecast_rating": "Fair",
+      "vs_typical": 52
+    }
   },
-  "solar": {"sfi": 200.0, "kp": 1.0, "ap": 5.0},
-  "storm": {"probability": 0.4, "predicted_kp": 2.1}
+  "solar": {"sfi": 183.0, "kp": 1.0, "ap": 4.0},
+  "storm": {"probability": 0.0, "predicted_kp": 0.8}
 }
 ```
+
+### API Fields
+
+| Field | Description |
+|-------|-------------|
+| `index` | Current DX Index (0-100) |
+| `rating` | Human-readable rating |
+| `forecast` | Tomorrow's predicted DX Index |
+| `forecast_rating` | Tomorrow's predicted rating |
+| `vs_typical` | Percentage above hourly baseline (only present if >20%) |
 
 ### Usage Examples
 
@@ -174,7 +227,9 @@ curl -s https://wspr.hb9vqq.ch/api/dx.json | jq '.bands["10m"].rating'
 ```python
 import urllib.request, json
 data = json.loads(urllib.request.urlopen("https://wspr.hb9vqq.ch/api/dx.json").read())
-print(f"10m: {data['bands']['10m']['rating']}")
+for band, info in data['bands'].items():
+    peak = f" (+{info['vs_typical']}%)" if 'vs_typical' in info else ""
+    print(f"{band}: {info['rating']}{peak}")
 ```
 
 **JavaScript**
@@ -182,10 +237,26 @@ print(f"10m: {data['bands']['10m']['rating']}")
 ```javascript
 fetch("https://wspr.hb9vqq.ch/api/dx.json")
   .then(r => r.json())
-  .then(d => console.log("10m:", d.bands["10m"].rating))
+  .then(d => {
+    for (const [band, info] of Object.entries(d.bands)) {
+      const peak = info.vs_typical ? ` (+${info.vs_typical}%)` : "";
+      console.log(`${band}: ${info.rating}${peak}`);
+    }
+  });
 ```
 
 Updates every 10 minutes.
+
+## How It Works
+
+The DX Index is calculated from real-time WSPR (Weak Signal Propagation Reporter) data:
+
+1. **Data source**: WSPR spots with distance >3000km (true DX paths)
+2. **Normalization**: Spots per active transmitter (removes participation bias)
+3. **Hourly comparison**: Current performance vs. 30-day average for this hour
+4. **Solar/geomagnetic factors**: SFI, Kp, and Ap indices influence the rating
+
+This provides a more accurate picture than traditional propagation predictions based solely on solar indices.
 
 ## License
 
