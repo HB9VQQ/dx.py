@@ -156,7 +156,7 @@ The indicator only appears when performance exceeds 20% above typical.
 
 ## Web Version
 
-Prefer a browser? View the full dashboard at [wspr.hb9vqq.ch](https://wspr.hb9vqq.ch)
+Prefer a browser? View the full dashboard at [wspr.hb9vqq.ch]([https://wspr.hb9vqq.ch](https://grafana.gafner.net/goto/_-9MJnGDg?orgId=1))
 
 ## API
 
