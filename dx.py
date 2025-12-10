@@ -3,7 +3,7 @@
 DX Index CLI - Quick HF propagation check from command line
 
 Queries the public API for current HF band conditions.
-Default server: wspr.hb9vqq.ch
+Default server: tinyurl.com/HFDXProp
 
 Configuration:
     API endpoint can be changed via:
@@ -154,7 +154,13 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
             lines.append(f"  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
     
     lines.append("═══════════════════════════════════════════════════════")
-    lines.append("  Source: wspr.hb9vqq.ch | 73 de HB9VQQ")
+    source = data.get("source", "wspr.hb9vqq.ch")
+    # Strip protocol for display
+    if source.startswith("https://"):
+        source = source[8:]
+    elif source.startswith("http://"):
+        source = source[7:]
+    lines.append(f"  Source: {source} | 73 de HB9VQQ")
     lines.append("")
     
     return "\n".join(lines)
@@ -231,7 +237,7 @@ Examples:
   dx --watch              Auto-refresh every 60s
   dx --alert Good         Exit 0 if any band >= Good
 
-Data source: https://wspr.hb9vqq.ch
+Data source: https://tinyurl.com/HFDXProp
 73 de HB9VQQ
         """
     )
