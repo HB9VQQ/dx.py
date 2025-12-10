@@ -35,14 +35,12 @@ A command-line tool for checking real-time HF radio propagation conditions.
 ### Linux / macOS
 
 ```bash
-# Download
+# Download and run
 curl -O https://raw.githubusercontent.com/HB9VQQ/dx.py/main/dx.py
-
-# Run
 python3 dx.py
 
-# Optional: add to PATH
-sudo mv dx.py /usr/local/bin/dx
+# Optional: add to PATH as 'dx'
+sudo cp dx.py /usr/local/bin/dx && sudo chmod +x /usr/local/bin/dx
 ```
 
 ### Windows
@@ -156,7 +154,7 @@ The indicator only appears when performance exceeds 20% above typical.
 
 ## Web Version
 
-Prefer a browser? View the full dashboard at [wspr.hb9vqq.ch]([https://wspr.hb9vqq.ch](https://grafana.gafner.net/goto/_-9MJnGDg?orgId=1))
+Prefer a browser? View the full dashboard at [grafana.gafner.net](https://grafana.gafner.net/goto/_-9MJnGDg?orgId=1)
 
 ## API
 
