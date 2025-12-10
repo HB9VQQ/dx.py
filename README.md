@@ -24,7 +24,7 @@ A command-line tool for checking real-time HF radio propagation conditions.
 
 - **Real-time DX Index** for 10m, 15m, 20m, and 40m bands
 - **Tomorrow's forecast** based on NOAA solar predictions
-- **Peak detection** - shows ⬆+XX% when a band exceeds 20% above its typical hourly performance
+- **Peak detection** - shows ⬆+XX% when a band is 20% or more above its typical hourly performance
 - **Storm warnings** when geomagnetic disturbances are predicted
 - **Multiple output formats** - standard, compact, JSON
 - **Alert mode** for scripting and notifications
@@ -108,7 +108,7 @@ $ dx --json | jq '.bands["10m"].rating'
 "Excellent"
 
 # Check if any band is performing above typical
-$ dx --json | jq '.bands | to_entries[] | select(.value.vs_typical > 30)'
+$ dx --json | jq '.bands | to_entries[] | select(.value.vs_typical >= 30)'
 ```
 
 ### Notification when band opens
@@ -150,7 +150,7 @@ $ dx --watch
 
 When you see `⬆+76%` next to a rating, it means that band is currently performing 76% better than its typical performance for this hour of day (based on a 30-day average). This highlights exceptional openings worth taking advantage of.
 
-The indicator only appears when performance exceeds 20% above typical.
+The indicator only appears when performance is 20% or more above typical.
 
 ## Web Version
 
@@ -210,7 +210,7 @@ https://wspr.hb9vqq.ch/api/dx.json
 | `rating` | Human-readable rating |
 | `forecast` | Tomorrow's predicted DX Index |
 | `forecast_rating` | Tomorrow's predicted rating |
-| `vs_typical` | Percentage above hourly baseline (only present if >20%) |
+| `vs_typical` | Percentage above hourly baseline (only present if ≥20%) |
 
 ### Usage Examples
 
