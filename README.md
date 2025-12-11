@@ -267,4 +267,4 @@ MIT License - Free to use and modify.
 73 de HB9VQQ
 
 - Website: [Current HF Band DX Conditions and Forecast](https://grafana.gafner.net/goto/U_F_fDMvg?orgId=1)
-- GitHub: [github.com/HB9VQQ](https://github.com/HB9VQQ)
+- QRZ.com: [HB9VQQ](https://www.qrz.com/db/HB9VQQ)
