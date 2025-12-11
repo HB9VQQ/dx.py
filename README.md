@@ -24,7 +24,7 @@ A command-line tool for checking real-time HF radio propagation conditions.
 
 ## Features
 
-- **Real-time DX Index** for 10m, 15m, 20m, and 40m bands
+- **Real-time DX Index** for 10m, 15m, 20m, 40m and 80m bands
 - **Tomorrow's forecast** based on NOAA solar predictions
 - **Peak detection** - shows ⬆+XX% when a band is 20% or more above its typical hourly performance
 - **Storm warnings** when geomagnetic disturbances are predicted
