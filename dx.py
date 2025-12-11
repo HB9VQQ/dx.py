@@ -26,6 +26,8 @@ Examples:
     dx --alert Good         # Exit 0 if any band >= Good, else exit 1
 
 Author: HB9VQQ
+Version: 1.3 - Dec 11, 2025 - Dynamic band discovery from API (no update needed for new bands)
+Version: 1.2 - Dec 11, 2025 - Added 80m band support
 Version: 1.1 - Dec 10, 2025 - Added vs_typical peak percentage display
 Version: 1.0 - Dec 7, 2025
 """
@@ -50,7 +52,23 @@ import os
 DEFAULT_API_URL = "https://wspr.hb9vqq.ch/api/dx.json"
 API_URL = os.environ.get("DX_API_URL", DEFAULT_API_URL)
 
-ALL_BANDS = ["10m", "15m", "20m", "40m"]
+# Band display order (highest frequency first)
+# Bands not in this list will be appended at the end
+BAND_ORDER = ["10m", "12m", "15m", "17m", "20m", "30m", "40m", "60m", "80m", "160m"]
+
+
+def get_available_bands(data: dict) -> list:
+    """Get available bands from API response, sorted by frequency"""
+    available = list(data.get("bands", {}).keys())
+    
+    # Sort by BAND_ORDER, unknown bands go to end
+    def sort_key(band):
+        try:
+            return BAND_ORDER.index(band)
+        except ValueError:
+            return 999
+    
+    return sorted(available, key=sort_key)
 
 # Rating symbols for terminal
 SYMBOLS = {
@@ -190,8 +208,10 @@ def format_compact(data: dict, bands: list) -> str:
 
 def format_json(data: dict, bands: list) -> str:
     """JSON output for scripting"""
-    # Filter to requested bands
-    if bands != ALL_BANDS:
+    available = get_available_bands(data)
+    
+    # Filter to requested bands if subset specified
+    if set(bands) != set(available):
         filtered = {
             "updated": data.get("updated"),
             "bands": {b: data.get("bands", {}).get(b) for b in bands if b in data.get("bands", {})},
@@ -258,16 +278,23 @@ Data source: https://tinyurl.com/HFDXProp
     # Override API URL if specified (for testing)
     api_url = args.url
     
-    # Filter bands if specified
-    bands = ALL_BANDS
-    if args.bands:
-        bands = [b for b in args.bands if b in ALL_BANDS]
-        if not bands:
-            print("Error: No valid bands specified. Use: 10m, 15m, 20m, 40m", file=sys.stderr)
-            sys.exit(1)
+    # User-requested bands (validated after fetching data)
+    requested_bands = args.bands if args.bands else None
     
     def refresh():
         data = fetch_data(api_url)
+        
+        # Get available bands from API
+        available = get_available_bands(data)
+        
+        # Determine which bands to show
+        if requested_bands:
+            bands = [b for b in requested_bands if b in available]
+            if not bands:
+                print(f"Error: No valid bands specified. Available: {', '.join(available)}", file=sys.stderr)
+                sys.exit(1)
+        else:
+            bands = available
         
         if args.alert:
             return check_alert(data, bands, args.alert)
