@@ -266,5 +266,5 @@ MIT License - Free to use and modify.
 
 73 de HB9VQQ
 
-- Website: [wspr.hb9vqq.ch](https://wspr.hb9vqq.ch)
+- Website: [Current HF Band DX Conditions and Forecast](https://grafana.gafner.net/goto/U_F_fDMvg?orgId=1)
 - GitHub: [github.com/HB9VQQ](https://github.com/HB9VQQ)
