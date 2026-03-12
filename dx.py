@@ -26,6 +26,7 @@ Examples:
     dx --alert Good         # Exit 0 if any band >= Good, else exit 1
 
 Author: HB9VQQ
+Version: 1.4 - Mar 12, 2026 - Added User-Agent header for Cloudflare compatibility
 Version: 1.3 - Dec 11, 2025 - Dynamic band discovery from API (no update needed for new bands)
 Version: 1.2 - Dec 11, 2025 - Added 80m band support
 Version: 1.1 - Dec 10, 2025 - Added vs_typical peak percentage display
@@ -92,7 +93,8 @@ SYMBOLS_ASCII = {
 def fetch_data(url: str = API_URL) -> dict:
     """Fetch current conditions from public API"""
     try:
-        with urllib.request.urlopen(url, timeout=10) as response:
+        req = urllib.request.Request(url, headers={'User-Agent': 'DXIndex/1.3'})
+        with urllib.request.urlopen(req, timeout=10) as response:
             return json.loads(response.read().decode('utf-8'))
     except urllib.error.URLError as e:
         print(f"Error: Cannot reach API - {e.reason}", file=sys.stderr)
