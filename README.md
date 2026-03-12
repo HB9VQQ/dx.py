@@ -3,46 +3,36 @@
 A command-line tool for checking real-time HF radio propagation conditions.
 
 ```
-═══════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════
   HF DX INDEX - Current Conditions
-═══════════════════════════════════════════════════════
-  Updated: 2025-12-11 14:05 UTC
+═══════════════════════════════════════════════════════════════════
+  Updated: 2026-03-12 20:30 UTC
 
   Band   Now      Rating             Tomorrow
-  ────────────────────────────────────────────────
-  10m    30.8     🔴 Poor             33.8 (Poor)
-  15m    42.9     🟠 Fair             34.3 (Poor)
-  20m    55.9     🟢 Good ⬆+30%       51.5 (Good)
-  40m    25.0     🔴 Poor             34.5 (Poor)
-  80m    20.0     🔴 Poor             30.5 (Poor)
+  ────────────────────────────────────────────────────────────
+  10m    62.4     🟢 Good            58.2 (Good)
+  15m    71.3     🔵 Excellent       65.1 (Good)
+  20m    68.9     🟢 Good            62.4 (Good)
+  40m    45.2     🟠 Fair            42.8 (Fair)
 
-  Solar: SFI 168 | Kp 2.0
-═══════════════════════════════════════════════════════
+  Solar: SFI 121 | Kp 2.0
+═══════════════════════════════════════════════════════════════════
   Source: tinyurl.com/HFDXProp | 73 de HB9VQQ
-
 ```
-
-## Features
-
-- **Real-time DX Index** for 10m, 15m, 20m, 40m and 80m bands
-- **Tomorrow's forecast** based on NOAA solar predictions
-- **Peak detection** - shows ⬆+XX% when a band is 20% or more above its typical hourly performance
-- **Storm warnings** when geomagnetic disturbances are predicted
-- **Multiple output formats** - standard, compact, JSON
-- **Alert mode** for scripting and notifications
-- **No dependencies** - uses only Python standard library
 
 ## Installation
 
 ### Linux / macOS
 
 ```bash
-# Download and run
+# Download
 curl -O https://raw.githubusercontent.com/HB9VQQ/dx.py/main/dx.py
-python3 dx.py
 
-# Optional: add to PATH as 'dx'
-sudo cp dx.py /usr/local/bin/dx && sudo chmod +x /usr/local/bin/dx
+# Make executable
+chmod +x dx.py
+
+# Optional: add to PATH
+sudo mv dx.py /usr/local/bin/dx
 ```
 
 ### Windows
@@ -62,11 +52,15 @@ python C:\path\to\dx.py %*
 ## Usage
 
 ```bash
-# Show all bands
+# Show all bands (global)
 dx
 
 # Show specific bands
 dx 10m 15m
+
+# Regional DX conditions
+dx --region eu
+dx --region na
 
 # Compact one-line output
 dx --compact
@@ -88,6 +82,50 @@ dx --alert Good
 dx --alert Fair
 ```
 
+## Regional Mode
+
+Check DX conditions from your region with both **Digi** (WSPR) and **SSB** (DX Cluster) indicators:
+
+```bash
+dx --region eu
+```
+
+```
+═══════════════════════════════════════════════════════════════════
+  HF DX INDEX - Europe DX Conditions
+═══════════════════════════════════════════════════════════════════
+  Updated: 2026-03-12 20:30 UTC
+
+  Corridor     Best Band  Digi               SSB
+  ────────────────────────────────────────────────────────────
+  EU↔NA        20m        🔵 Excellent        🔵 Strong
+  EU↔SA        10m        🔵 Excellent        🟢 Moderate
+  EU↔AF        15m        🔵 Excellent        🔴 --
+  EU↔OC        20m        🔵 Excellent        🔴 --
+  EU↔AS        20m        🔵 Excellent        🔴 --
+
+  Solar: SFI 121 | Kp 2.0
+═══════════════════════════════════════════════════════════════════
+  Source: dxmap.hb9vqq.ch | 73 de HB9VQQ
+```
+
+### Available Regions
+
+| Code | Region |
+|------|--------|
+| `eu` | Europe |
+| `na` | North America |
+| `sa` | South America |
+| `as` | Asia |
+| `oc` | Oceania |
+| `af` | Africa |
+
+### Columns Explained
+
+- **Digi**: WSPR-based DX Index (normalized propagation quality)
+- **SSB**: DX Cluster spot activity (confirmed voice contacts)
+- **Best Band**: Band with highest DX Index (SSB activity as tie-breaker)
+
 ## Examples
 
 ### Quick check
@@ -100,33 +138,37 @@ $ dx
 
 ```bash
 $ dx --compact
-10m:Excellent(79)⬆76% | 15m:Fair(44) | 20m:Fair(39) | 40m:Good(52)⬆52%
+10m:Good(62) | 15m:Excellent(71) | 20m:Good(69) | 40m:Fair(45)
+```
+
+### Regional compact
+
+```bash
+$ dx --region eu --compact
+EU↔NA:20m(D:E/S:S) | EU↔SA:10m(D:E/S:M) | EU↔AF:15m(D:E/S:-) | EU↔OC:20m(D:E/S:-)
 ```
 
 ### JSON for scripting
 
 ```bash
 $ dx --json | jq '.bands["10m"].rating'
-"Excellent"
-
-# Check if any band is performing above typical
-$ dx --json | jq '.bands | to_entries[] | select(.value.vs_typical >= 30)'
+"Good"
 ```
 
 ### Notification when band opens
 
 ```bash
 # Linux (notify-send)
-dx --alert Good && notify-send "HF bands are open!"
+dx --alert Good && notify-send "HF bands are good!"
 
 # macOS
-dx --alert Good && osascript -e 'display notification "HF bands are open!"'
+dx --alert Good && osascript -e 'display notification "HF bands are good!"'
 ```
 
 ### Cron job for alerts
 
 ```bash
-# Check every 15 minutes, send pushover notification when any band is Good or better
+# Check every 15 minutes, send notification when any band is Good or better
 */15 * * * * /usr/local/bin/dx --alert Good && curl -s -X POST https://api.pushover.net/1/messages.json -d "token=xxx&user=xxx&message=HF bands are good!"
 ```
 
@@ -136,9 +178,9 @@ dx --alert Good && osascript -e 'display notification "HF bands are open!"'
 $ dx --watch
 ```
 
-## Understanding the Display
+## Rating Scale
 
-### Rating Scale
+### Global (DX Index)
 
 | Rating | DX Index | Conditions |
 |--------|----------|------------|
@@ -148,15 +190,17 @@ $ dx --watch
 | 🔴 Poor | 20-35 | Few DX opportunities |
 | ⚫ VeryPoor | <20 | Band likely closed |
 
-### Peak Indicator (⬆+XX%)
+### SSB (DX Cluster)
 
-When you see `⬆+76%` next to a rating, it means that band is currently performing 76% better than its typical performance for this hour of day (based on a 30-day average). This highlights exceptional openings worth taking advantage of.
-
-The indicator only appears when performance is 20% or more above typical.
+| Rating | Spots | Meaning |
+|--------|-------|---------|
+| 🔵 Strong | ≥3 | Active SSB contacts confirmed |
+| 🟢 Moderate | 1-2 | Some SSB activity |
+| 🔴 -- | 0 | No recent SSB spots |
 
 ## Web Version
 
-Prefer a browser? View the full dashboard at [grafana.gafner.net](https://grafana.gafner.net/goto/_-9MJnGDg?orgId=1)
+Prefer a browser? View the full dashboard at [dxmap.hb9vqq.ch](https://dxmap.hb9vqq.ch)
 
 ## API
 
@@ -170,93 +214,25 @@ https://wspr.hb9vqq.ch/api/dx.json
 
 ```json
 {
-  "updated": "2025-12-09T20:45:07+00:00",
+  "updated": "2026-03-12T20:30:07+00:00",
   "bands": {
-    "10m": {
-      "index": 78.7,
-      "rating": "Excellent",
-      "forecast": 45.3,
-      "forecast_rating": "Fair",
-      "vs_typical": 76
-    },
-    "15m": {
-      "index": 43.6,
-      "rating": "Fair",
-      "forecast": 38.4,
-      "forecast_rating": "Fair"
-    },
-    "20m": {
-      "index": 38.6,
-      "rating": "Fair",
-      "forecast": 37.0,
-      "forecast_rating": "Fair"
-    },
-    "40m": {
-      "index": 52.0,
-      "rating": "Good",
-      "forecast": 43.6,
-      "forecast_rating": "Fair",
-      "vs_typical": 52
-    }
+    "10m": {"index": 62.4, "rating": "Good", "forecast": 58.2, "forecast_rating": "Good"},
+    "15m": {"index": 71.3, "rating": "Excellent", "forecast": 65.1, "forecast_rating": "Good"},
+    "20m": {"index": 68.9, "rating": "Good", "forecast": 62.4, "forecast_rating": "Good"},
+    "40m": {"index": 45.2, "rating": "Fair", "forecast": 42.8, "forecast_rating": "Fair"}
   },
-  "solar": {"sfi": 183.0, "kp": 1.0, "ap": 4.0},
-  "storm": {"probability": 0.0, "predicted_kp": 0.8}
+  "solar": {"sfi": 121.0, "kp": 2.0, "ap": 7.0},
+  "storm": {"probability": 15, "predicted_kp": 2.5}
 }
-```
-
-### API Fields
-
-| Field | Description |
-|-------|-------------|
-| `index` | Current DX Index (0-100) |
-| `rating` | Human-readable rating |
-| `forecast` | Tomorrow's predicted DX Index |
-| `forecast_rating` | Tomorrow's predicted rating |
-| `vs_typical` | Percentage above hourly baseline (only present if ≥20%) |
-
-### Usage Examples
-
-**curl**
-
-```bash
-curl -s https://wspr.hb9vqq.ch/api/dx.json | jq '.bands["10m"].rating'
-```
-
-**Python**
-
-```python
-import urllib.request, json
-data = json.loads(urllib.request.urlopen("https://wspr.hb9vqq.ch/api/dx.json").read())
-for band, info in data['bands'].items():
-    peak = f" (+{info['vs_typical']}%)" if 'vs_typical' in info else ""
-    print(f"{band}: {info['rating']}{peak}")
-```
-
-**JavaScript**
-
-```javascript
-fetch("https://wspr.hb9vqq.ch/api/dx.json")
-  .then(r => r.json())
-  .then(d => {
-    for (const [band, info] of Object.entries(d.bands)) {
-      const peak = info.vs_typical ? ` (+${info.vs_typical}%)` : "";
-      console.log(`${band}: ${info.rating}${peak}`);
-    }
-  });
 ```
 
 Updates every 10 minutes.
 
-## How It Works
+## Data Sources
 
-The DX Index is calculated from real-time WSPR (Weak Signal Propagation Reporter) data:
-
-1. **Data source**: WSPR spots with distance >3000km (true DX paths)
-2. **Normalization**: Spots per active transmitter (removes participation bias)
-3. **Hourly comparison**: Current performance vs. 30-day average for this hour
-4. **Solar/geomagnetic factors**: SFI, Kp, and Ap indices influence the rating
-
-This provides a more accurate picture than traditional propagation predictions based solely on solar indices.
+- **DX Index**: Derived from WSPR (Weak Signal Propagation Reporter) spots >3000km
+- **SSB Outlook**: DX Cluster spots aggregated by corridor
+- **Solar Data**: NOAA Space Weather Prediction Center
 
 ## License
 
@@ -266,5 +242,5 @@ MIT License - Free to use and modify.
 
 73 de HB9VQQ
 
-- Website: [Current HF Band DX Conditions and Forecast](https://grafana.gafner.net/goto/U_F_fDMvg?orgId=1)
-- QRZ.com: [HB9VQQ](https://www.qrz.com/db/HB9VQQ)
+- Website: [dxmap.hb9vqq.ch](https://dxmap.hb9vqq.ch)
+- GitHub: [github.com/HB9VQQ](https://github.com/HB9VQQ)
