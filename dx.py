@@ -303,7 +303,7 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
     # Solar data
     solar = data.get("solar", {})
     if solar.get("sfi") and solar.get("kp"):
-        lines.append(f"  Solar: SFI {solar['sfi']:.0f} | Kp {solar['kp']:.1f}")
+        lines.append(f"  Solar: SFI {solar['sfi']:.0f} | Kp {solar['kp']:.0f}")
     
     # Storm prediction
     storm = data.get("storm")
@@ -312,11 +312,11 @@ def format_standard(data: dict, bands: list, use_ascii: bool = False) -> str:
         kp = storm.get("predicted_kp", 0)
         if prob >= 50:
             if use_ascii:
-                lines.append(f"  [!] Storm: {prob:.0f}% probability -> Kp {kp:.1f}")
+                lines.append(f"  [!] Storm: {prob:.0f}% probability -> Kp {kp:.0f}")
             else:
-                lines.append(f"  ⚠️  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
+                lines.append(f"  ⚠️  Storm: {prob:.0f}% probability → Kp {kp:.0f}")
         elif prob >= 30:
-            lines.append(f"  Storm: {prob:.0f}% probability → Kp {kp:.1f}")
+            lines.append(f"  Storm: {prob:.0f}% probability → Kp {kp:.0f}")
     
     lines.append("═══════════════════════════════════════════════════════")
     source = data.get("source", "wspr.hb9vqq.ch")
@@ -438,7 +438,7 @@ def format_regional(data: dict, region: str, use_ascii: bool = False) -> str:
     # Solar data from main dx.json
     solar = data.get("solar", {})
     if solar.get("sfi") and solar.get("kp"):
-        lines.append(f"  Solar: SFI {solar['sfi']:.0f} | Kp {solar['kp']:.1f}")
+        lines.append(f"  Solar: SFI {solar['sfi']:.0f} | Kp {solar['kp']:.0f}")
     
     lines.append("═══════════════════════════════════════════════════════════════════")
     lines.append(f"  Source: dxmap.hb9vqq.ch | 73 de HB9VQQ")
