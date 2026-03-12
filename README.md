@@ -2,24 +2,6 @@
 
 A command-line tool for checking real-time HF radio propagation conditions.
 
-```
-═══════════════════════════════════════════════════════════════════
-  HF DX INDEX - Current Conditions
-═══════════════════════════════════════════════════════════════════
-  Updated: 2026-03-12 20:30 UTC
-
-  Band   Now      Rating             Tomorrow
-  ────────────────────────────────────────────────────────────
-  10m    62.4     🟢 Good            58.2 (Good)
-  15m    71.3     🔵 Excellent       65.1 (Good)
-  20m    68.9     🟢 Good            62.4 (Good)
-  40m    45.2     🟠 Fair            42.8 (Fair)
-
-  Solar: SFI 121 | Kp 2.0
-═══════════════════════════════════════════════════════════════════
-  Source: tinyurl.com/HFDXProp | 73 de HB9VQQ
-```
-
 ## Installation
 
 ### Linux / macOS
