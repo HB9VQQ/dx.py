@@ -10,9 +10,6 @@ A command-line tool for checking real-time HF radio propagation conditions.
 # Download
 curl -O https://raw.githubusercontent.com/HB9VQQ/dx.py/main/dx.py
 
-# Make executable
-chmod +x dx.py
-
 # Optional: add to PATH
 sudo mv dx.py /usr/local/bin/dx
 ```
