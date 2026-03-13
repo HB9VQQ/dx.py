@@ -108,6 +108,12 @@ EU↔AF:20m:100 | EU↔OC:15m:100/20m:M | EU↔AS:20m:100/15m:M | EU↔NA:20m:10
 
 [dxmap.hb9vqq.ch](https://dxmap.hb9vqq.ch)
 
+## Data Sources
+
+- **DX Index** - WSPR spots >3000km, normalized 0-100
+- **SSB** - DX Cluster spots aggregated by corridor
+- **Solar** - NOAA Space Weather Prediction Center
+
 ## Author
 
 73 de HB9VQQ
