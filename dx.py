@@ -37,6 +37,9 @@ Regions:
     af  - Africa
 
 Author: HB9VQQ
+Version: 2.7 - Mar 13, 2026 - Separate best bands for Digi and SSB, added -v/-h
+Version: 2.6 - Mar 13, 2026 - Show numeric MAX Index (matches dxmap)
+Version: 2.5 - Mar 13, 2026 - Digi uses average index (not max), Kp no decimal
 Version: 2.4 - Mar 12, 2026 - Fixed SSB thresholds (≥3=Strong), SSB tie-breaker for best band
 Version: 2.3 - Mar 12, 2026 - Regional uses DX Index from dxmap (not spots_per_tx)
 Version: 2.2 - Mar 12, 2026 - Added SSB column from DX cluster (dxmap.hb9vqq.ch)
@@ -163,7 +166,7 @@ def fetch_regional_v4_data(region: str) -> dict:
 def aggregate_v4_by_corridor(data: dict, region: str) -> dict:
     """
     Aggregate v4.json paths by corridor.
-    Returns best band (by max DX Index, SSB spots as tie-breaker) and SSB per corridor.
+    Returns best Digi band (by MAX index) and best SSB band (by most spots) separately.
     """
     corridors = {}
     paths = data.get("paths", [])
@@ -186,7 +189,7 @@ def aggregate_v4_by_corridor(data: dict, region: str) -> dict:
         if band not in corridors[corridor]['bands']:
             corridors[corridor]['bands'][band] = {'max_index': 0, 'ssb': 0}
         
-        # Track max index per band (best path)
+        # Track MAX index per band
         if index > corridors[corridor]['bands'][band]['max_index']:
             corridors[corridor]['bands'][band]['max_index'] = index
         
@@ -194,26 +197,39 @@ def aggregate_v4_by_corridor(data: dict, region: str) -> dict:
         if ssb > corridors[corridor]['bands'][band]['ssb']:
             corridors[corridor]['bands'][band]['ssb'] = ssb
     
-    # Determine best band per corridor (highest max_index, prefer more SSB spots on ties)
+    # Determine best Digi band and best SSB band separately
     for corridor, cdata in corridors.items():
-        best_band = None
-        best_index = 0
-        best_ssb = -1
+        # Best Digi: highest max_index
+        best_digi_band = None
+        best_digi_index = 0
+        # Best SSB: most spots, then highest index as tiebreaker
+        best_ssb_band = None
+        best_ssb_spots = 0
+        best_ssb_index = 0
+        
         for band, bdata in cdata['bands'].items():
-            # Higher index wins, or same index but more SSB spots
-            if bdata['max_index'] > best_index or \
-               (bdata['max_index'] == best_index and bdata['ssb'] > best_ssb):
-                best_index = bdata['max_index']
-                best_band = band
-                best_ssb = bdata['ssb']
-        cdata['best_band'] = best_band
-        cdata['best_index'] = best_index
+            # Check for best Digi
+            if bdata['max_index'] > best_digi_index:
+                best_digi_index = bdata['max_index']
+                best_digi_band = band
+            
+            # Check for best SSB
+            if bdata['ssb'] > best_ssb_spots or \
+               (bdata['ssb'] == best_ssb_spots and bdata['ssb'] > 0 and bdata['max_index'] > best_ssb_index):
+                best_ssb_spots = bdata['ssb']
+                best_ssb_band = band
+                best_ssb_index = bdata['max_index']
+        
+        cdata['best_digi_band'] = best_digi_band
+        cdata['best_digi_index'] = best_digi_index
+        cdata['best_ssb_band'] = best_ssb_band
+        cdata['best_ssb_spots'] = best_ssb_spots
     
-    # Sort corridors by best_index descending, filter out unknown and Antarctica
+    # Sort corridors by best_digi_index descending, filter out unknown and Antarctica
     sorted_corridors = dict(sorted(
         [(k, v) for k, v in corridors.items() 
          if not k.startswith('Unknown') and '↔AN' not in k and 'AN↔' not in k],
-        key=lambda x: x[1].get('best_index', 0), 
+        key=lambda x: x[1].get('best_digi_index', 0), 
         reverse=True
     ))
     
@@ -405,33 +421,34 @@ def format_regional(data: dict, region: str, use_ascii: bool = False) -> str:
             pass
     lines.append("")
     
-    # Header - Digi = WSPR DX Index, SSB = DX Cluster
-    lines.append(f"  {'Corridor':<12} {'Best Band':<10} {'Digi':<18} {'SSB':<18}")
-    lines.append("  " + "─" * 60)
+    # Header - Digi = best band:index, SSB = best band:rating
+    lines.append(f"  {'Corridor':<12} {'Digi':<14} {'SSB':<16}")
+    lines.append("  " + "─" * 44)
     
-    # Each corridor (already sorted by best_index)
+    # Each corridor (already sorted by best_digi_index)
     for corridor, cdata in corridors.items():
-        best_band = cdata.get("best_band", "?")
-        best_index = cdata.get("best_index", 0)
-        digi_rating, digi_symbol = index_to_rating(best_index)
+        digi_band = cdata.get("best_digi_band", "?")
+        digi_index = cdata.get("best_digi_index", 0)
+        ssb_band = cdata.get("best_ssb_band")
+        ssb_spots = cdata.get("best_ssb_spots", 0)
         
-        # Get SSB spots for this corridor on best band
-        ssb_spots = 0
-        if best_band and best_band in cdata.get('bands', {}):
-            ssb_spots = cdata['bands'][best_band].get('ssb', 0)
-        ssb_rating, ssb_symbol = ssb_to_rating(ssb_spots)
+        # Format Digi column
+        digi_str = f"{digi_band}:{digi_index:.0f}"
         
-        if use_ascii:
-            digi_symbol = {"🔵": "[++++]", "🟢": "[+++ ]", "🟠": "[++  ]", "🔴": "[+   ]"}.get(digi_symbol, "[    ]")
-            ssb_symbol = {"🔵": "[++++]", "🟢": "[+++ ]", "🟠": "[++  ]", "🔴": "[+   ]"}.get(ssb_symbol, "[    ]")
-        
-        digi_str = f"{digi_symbol} {digi_rating}"
-        if ssb_spots > 0:
-            ssb_str = f"{ssb_symbol} {ssb_rating}"
+        # Format SSB column with emoji
+        if ssb_spots > 0 and ssb_band:
+            ssb_rating, ssb_symbol = ssb_to_rating(ssb_spots)
+            if use_ascii:
+                ssb_str = f"{ssb_band}:{ssb_rating}"
+            else:
+                ssb_str = f"{ssb_symbol} {ssb_band}:{ssb_rating}"
         else:
-            ssb_str = f"{ssb_symbol} --"
+            if use_ascii:
+                ssb_str = "--"
+            else:
+                ssb_str = "🔴 --"
         
-        lines.append(f"  {corridor:<12} {best_band:<10} {digi_str:<18} {ssb_str}")
+        lines.append(f"  {corridor:<12} {digi_str:<14} {ssb_str}")
     
     lines.append("")
     
@@ -480,17 +497,16 @@ def format_compact_regional(data: dict, region: str) -> str:
     
     parts = []
     for corridor, cdata in corridors.items():
-        band = cdata.get("best_band", "?")
-        best_index = cdata.get("best_index", 0)
-        digi_rating, _ = index_to_rating(best_index)
+        digi_band = cdata.get("best_digi_band", "?")
+        digi_index = cdata.get("best_digi_index", 0)
+        ssb_band = cdata.get("best_ssb_band")
+        ssb_spots = cdata.get("best_ssb_spots", 0)
         
-        # Get SSB spots for this corridor on best band
-        ssb = 0
-        if band and band in cdata.get('bands', {}):
-            ssb = cdata['bands'][band].get('ssb', 0)
-        ssb_rating, _ = ssb_to_rating(ssb)
-        
-        parts.append(f"{corridor}:{band}(D:{digi_rating[:1]}/S:{ssb_rating[:1]})")
+        if ssb_spots > 0 and ssb_band:
+            ssb_rating, _ = ssb_to_rating(ssb_spots)
+            parts.append(f"{corridor}:{digi_band}:{digi_index:.0f}/{ssb_band}:{ssb_rating[0]}")
+        else:
+            parts.append(f"{corridor}:{digi_band}:{digi_index:.0f}")
     
     return " | ".join(parts)
 
@@ -597,6 +613,7 @@ Data source: https://tinyurl.com/HFDXProp
         """
     )
     
+    parser.add_argument("-v", "--version", action="version", version="dx.py 2.7 (Mar 13, 2026) by HB9VQQ")
     parser.add_argument("bands", nargs="*", help="Specific bands to show (e.g., 10m 15m)")
     parser.add_argument("--region", "-r", type=str, metavar="REGION",
                        help="Show regional DX conditions (eu, na, sa, as, oc, af)")
